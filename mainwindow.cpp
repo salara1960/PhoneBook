@@ -2,7 +2,9 @@
 #include "ui_mainwindow.h"
 
 //const QString app_ver = "1.2";//04.12.2018
-const QString app_ver = "1.3";//05.12.2018
+//const QString app_ver = "1.3";//05.12.2018
+const QString app_ver = "1.4";//10.12.2018
+
 
 const QString app_name = "Телефонная книжка";
 const int max_column = 10;
@@ -21,12 +23,18 @@ const char * mk_table_db3 = "CREATE TABLE IF NOT EXISTS phone (\
         u_epoch TIMESTAMP);";
 
 //**************************************************************************
+
+PWindow::TheError::TheError(int err) { code = err; }
+
+//**************************************************************************
 PWindow::PWindow(QWidget *parent, QString *nm) : QMainWindow(parent), ui(new Ui::PWindow)
 {
     ui->setupUi(this);
     this->setFixedSize(this->size());
 
     this->setWindowTitle(app_name);
+
+    MyError = 0;
 
     list.clear();
     ptr_item.clear();
@@ -38,9 +46,16 @@ PWindow::PWindow(QWidget *parent, QString *nm) : QMainWindow(parent), ui(new Ui:
     cur_record = last_rec = 0;
     total_rec = -1;
     db = new QSqlDatabase(QSqlDatabase::addDatabase("QSQLITE"));
+    if (db == NULL) {
+        MyError |= 1;//create database object error
+        throw TheError(MyError);
+    }
     db->setDatabaseName(*name);
     query = new QSqlQuery(*db);
-    open_db();
+    if (!open_db()) {
+        MyError |= 2;//open database error
+        throw TheError(MyError);
+    }
 
     connect(ui->actionAdd, SIGNAL(triggered(bool)), this, SLOT(AddRecord()));
     connect(ui->actionClear, SIGNAL(triggered(bool)), this, SLOT(clear_forms()));
@@ -426,8 +441,9 @@ int cnt=0;
 
         gd = cmd_request(&lt, &tp);
         cnt = lt.length();
-        if ((gd) && (cnt>0)) list = lt;
-
+        if (gd) {
+            if (cnt > 0) list = lt;
+        }
     } else MsgEmpty();
 
     return cnt;

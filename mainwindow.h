@@ -45,6 +45,13 @@ class PWindow : public QMainWindow
     Q_OBJECT
 
 public:
+
+    class TheError {
+        public :
+            int code;
+            TheError(int);
+    };
+
     explicit PWindow(QWidget *parent = 0, QString *nm = 0);
     ~PWindow();
 
@@ -82,6 +89,7 @@ private:
     QString *name;
     bool openok, good;
     int cur_record, total_rec, last_rec;
+    int MyError;
     QSqlError error;
     db_rec srec;
     QStringList list;
